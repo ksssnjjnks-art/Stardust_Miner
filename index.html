@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Космический кликер</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            width: 100%;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #ff8a00, #e52e71);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 10px rgba(229, 46, 113, 0.3);
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #ffcc00;
+        }
+        
+        .main-content {
+            display: flex;
+            width: 100%;
+            gap: 20px;
+        }
+        
+        .clicker-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        
+        .planet {
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle at 30% 30%, #4a6fa5, #1e3a5f);
+            border-radius: 50%;
+            margin: 20px 0;
+            cursor: pointer;
+            position: relative;
+            box-shadow: 
+                inset 0 0 50px rgba(0, 0, 0, 0.5),
+                0 0 30px rgba(74, 111, 165, 0.5);
+            transition: transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .planet:active {
+            transform: scale(0.95);
+        }
+        
+        .planet::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.2), transparent 70%);
+            border-radius: 50%;
+        }
+        
+        .crater {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 50%;
+        }
+        
+        .crater:nth-child(1) {
+            width: 40px;
+            height: 40px;
+            top: 60px;
+            left: 50px;
+        }
+        
+        .crater:nth-child(2) {
+            width: 25px;
+            height: 25px;
+            top: 120px;
+            right: 60px;
+        }.crater:nth-child(3) {
+            width: 35px;
+            height: 35px;
+            bottom: 70px;
+            left: 80px;
+        }
+        
+        .click-text {
+            position: absolute;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ffcc00;
+            opacity: 0;
+            pointer-events: none;
+            animation: floatUp 1s forwards;
+        }
+        
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+        }
+        
+        .upgrades-section {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .upgrades-section h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #ffcc00;
+        }
+        
+        .upgrade {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s;
+        }
+        
+        .upgrade:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .upgrade-info {
+            flex: 1;
+        }
+        
+        .upgrade-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .upgrade-description {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .upgrade-cost {
+            font-weight: bold;
+            color: #ffcc00;
+            margin-right: 10px;
+        }
+        
+        .buy-btn {
+            background: linear-gradient(90deg, #ff8a00, #e52e71);
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        
+        .buy-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .buy-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .achievements {
+            width: 100%;
+            margin-top: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        
+        .achievements h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #ffcc00;
+        }
+        
+        .achievement-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .achievement {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            opacity: 0.5;
+            transition: opacity 0.3s;
+        }
+        
+        .achievement.unlocked {
+            opacity: 1;
+            background: rgba(255, 215, 0, 0.2);
+        }
+        
+        .achievement-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .click-power {
+            margin-top: 15px;
+            font-size: 1.2rem;
+            color: #ffcc00;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {flex-direction: column;
+            }
+            
+            .planet {
+                width: 200px;
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Космический кликер</h1>
+            <p>Кликай по планете, чтобы зарабатывать звездную пыль и улучшать свои возможности!</p>
+        </header>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">Звездная пыль</div>
+                <div class="stat-value" id="star-dust">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Пыль/клик</div>
+                <div class="stat-value" id="click-power">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Пыль/сек</div>
+                <div class="stat-value" id="passive-income">0</div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="clicker-section">
+                <h2>Кликай по планете!</h2>
+                <div class="planet" id="planet">
+                    <div class="crater"></div>
+                    <div class="crater"></div>
+                    <div class="crater"></div>
+                </div>
+                <div class="click-power">Мощность клика: <span id="current-click-power">1</span></div>
+            </div>
+            
+            <div class="upgrades-section">
+                <h2>Улучшения</h2>
+                <div id="upgrades-container">
+                    <!-- Улучшения будут добавлены через JavaScript -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="achievements">
+            <h2>Достижения</h2>
+            <div class="achievement-list" id="achievements-container">
+                <!-- Достижения будут добавлены через JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Игровые переменные
+        let starDust = 0;
+        let clickPower = 1;
+        let passiveIncome = 0;
+        
+        // Элементы DOM
+        const starDustElement = document.getElementById('star-dust');
+        const clickPowerElement = document.getElementById('click-power');
+        const passiveIncomeElement = document.getElementById('passive-income');
+        const currentClickPowerElement = document.getElementById('current-click-power');
+        const planetElement = document.getElementById('planet');
+        const upgradesContainer = document.getElementById('upgrades-container');
+        const achievementsContainer = document.getElementById('achievements-container');
+        
+        // Улучшения
+        const upgrades = [
+            {
+                id: 1,
+                name: "Улучшенный сборщик",
+                description: "Увеличивает количество звездной пыли за клик",
+                baseCost: 10,
+                cost: 10,
+                power: 1,
+                count: 0,
+                type: "click"
+            },
+            {
+                id: 2,
+                name: "Автоматический сборщик",
+                description: "Автоматически собирает звездную пыль",
+                baseCost: 50,
+                cost: 50,
+                power: 0.5,
+                count: 0,
+                type: "passive"
+            },
+            {
+                id: 3,
+                name: "Квантовый усилитель",
+                description: "Значительно увеличивает мощность клика",
+                baseCost: 200,
+                cost: 200,
+                power: 5,
+                count: 0,
+                type: "click"
+            },
+            {
+                id: 4,
+                name: "Звездная батарея",
+                description: "Увеличивает пассивный доход",baseCost: 500,
+                cost: 500,
+                power: 2,
+                count: 0,
+                type: "passive"
+            },
+            {
+                id: 5,
+                name: "Галактический реактор",
+                description: "Огромное увеличение пассивного дохода",
+                baseCost: 2000,
+                cost: 2000,
+                power: 10,
+                count: 0,
+                type: "passive"
+            },
+            {
+                id: 6,
+                name: "Планетарный бустер",
+                description: "Максимальное увеличение мощности клика",
+                baseCost: 5000,
+                cost: 5000,
+                power: 25,
+                count: 0,
+                type: "click"
+            }
+        ];
+        
+        // Достижения
+        const achievements = [
+            {
+                id: 1,
+                name: "Первые шаги",
+                description: "Собрать 100 звездной пыли",
+                icon: "🚀",
+                condition: () => starDust >= 100,
+                unlocked: false
+            },
+            {
+                id: 2,
+                name: "Начинающий астроном",
+                description: "Собрать 1000 звездной пыли",
+                icon: "⭐",
+                condition: () => starDust >= 1000,
+                unlocked: false
+            },
+            {
+                id: 3,
+                name: "Космический магнат",
+                description: "Собрать 10000 звездной пыли",
+                icon: "🌌",
+                condition: () => starDust >= 10000,
+                unlocked: false
+            },
+            {
+                id: 4,
+                name: "Улучшатель",
+                description: "Купить 10 улучшений",
+                icon: "🔧",
+                condition: () => upgrades.reduce((total, upgrade) => total + upgrade.count, 0) >= 10,
+                unlocked: false
+            },
+            {
+                id: 5,
+                name: "Автоматизатор",
+                description: "Иметь 10 пассивных сборщиков",
+                icon: "⚙️",
+                condition: () => upgrades.filter(u => u.type === "passive").reduce((total, upgrade) => total + upgrade.count, 0) >= 10,
+                unlocked: false
+            }
+        ];
+        
+        // Инициализация улучшений
+        function initUpgrades() {
+            upgradesContainer.innerHTML = '';
+            upgrades.forEach(upgrade => {
+                const upgradeElement = document.createElement('div');
+                upgradeElement.className = 'upgrade';
+                upgradeElement.innerHTML = 
+                    <div class="upgrade-info">
+                        <div class="upgrade-name">${upgrade.name}</div>
+                        <div class="upgrade-description">${upgrade.description}</div>
+                        <div class="upgrade-count">Куплено: ${upgrade.count}</div>
+                    </div>
+                    <div>
+                        <span class="upgrade-cost">${Math.floor(upgrade.cost)}</span>
+                        <button class="buy-btn" data-id="${upgrade.id}">Купить</button>
+                    </div>
+                ;
+                upgradesContainer.appendChild(upgradeElement);
+            });
+            
+            // Добавляем обработчики событий для кнопок покупки
+            document.querySelectorAll('.buy-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const upgradeId = parseInt(this.getAttribute('data-id'));
+                    buyUpgrade(upgradeId);
+                });
+            });
+        }
+        
+        // Инициализация достижений
+        function initAchievements() {
+            achievementsContainer.innerHTML = '';
+            achievements.forEach(achievement => {const achievementElement = document.createElement('div');
+                achievementElement.className = achievement ${achievement.unlocked ? 'unlocked' : ''};
+                achievementElement.innerHTML = 
+                    <div class="achievement-icon">${achievement.icon}</div>
+                    <div class="achievement-name">${achievement.name}</div>
+                    <div class="achievement-description">${achievement.description}</div>
+                ;
+                achievementsContainer.appendChild(achievementElement);
+            });
+        }
+        
+        // Покупка улучшения
+        function buyUpgrade(id) {
+            const upgrade = upgrades.find(u => u.id === id);
+            if (starDust >= upgrade.cost) {
+                starDust -= upgrade.cost;
+                upgrade.count++;
+                
+                if (upgrade.type === "click") {
+                    clickPower += upgrade.power;
+                } else if (upgrade.type === "passive") {
+                    passiveIncome += upgrade.power;
+                }
+                
+                // Увеличиваем стоимость улучшения
+                upgrade.cost = Math.floor(upgrade.baseCost * Math.pow(1.15, upgrade.count));
+                
+                updateUI();
+                checkAchievements();
+            }
+        }
+        
+        // Проверка достижений
+        function checkAchievements() {
+            achievements.forEach(achievement => {
+                if (!achievement.unlocked && achievement.condition()) {
+                    achievement.unlocked = true;
+                    // Можно добавить уведомление о получении достижения
+                }
+            });
+            updateAchievementsUI();
+        }
+        
+        // Обновление интерфейса достижений
+        function updateAchievementsUI() {
+            const achievementElements = document.querySelectorAll('.achievement');
+            achievementElements.forEach((element, index) => {
+                if (achievements[index].unlocked) {
+                    element.classList.add('unlocked');
+                }
+            });
+        }
+        
+        // Обновление интерфейса
+        function updateUI() {
+            starDustElement.textContent = Math.floor(starDust);
+            clickPowerElement.textContent = clickPower.toFixed(1);
+            passiveIncomeElement.textContent = passiveIncome.toFixed(1);
+            currentClickPowerElement.textContent = clickPower.toFixed(1);
+            
+            // Обновляем кнопки улучшений
+            document.querySelectorAll('.upgrade').forEach((element, index) => {
+                const upgrade = upgrades[index];
+                const countElement = element.querySelector('.upgrade-count');
+                const costElement = element.querySelector('.upgrade-cost');
+                const button = element.querySelector('.buy-btn');
+                
+                countElement.textContent = Куплено: ${upgrade.count};
+                costElement.textContent = Math.floor(upgrade.cost);
+                
+                if (starDust < upgrade.cost) {
+                    button.disabled = true;
+                } else {
+                    button.disabled = false;
+                }
+            });
+        }
+        
+        // Обработчик клика по планете
+        planetElement.addEventListener('click', function(e) {
+            // Добавляем звездную пыль
+            starDust += clickPower;
+            
+            // Создаем летающий текст
+            const clickText = document.createElement('div');
+            clickText.className = 'click-text';
+            clickText.textContent = +${clickPower.toFixed(1)};
+            clickText.style.left = ${e.offsetX}px;
+            clickText.style.top = ${e.offsetY}px;
+            planetElement.appendChild(clickText);// Удаляем текст после анимации
+            setTimeout(() => {
+                clickText.remove();
+            }, 1000);
+            
+            // Анимация планеты
+            planetElement.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                planetElement.style.transform = 'scale(1)';
+            }, 100);
+            
+            updateUI();
+            checkAchievements();
+        });
+        
+        // Пассивный доход
+        setInterval(() => {
+            starDust += passiveIncome / 10;
+            updateUI();
+            checkAchievements();
+        }, 100);
+        
+        // Инициализация игры
+        function initGame() {
+            initUpgrades();
+            initAchievements();
+            updateUI();
+        }
+        
+        // Запуск игры
+        initGame();
+    </script>
+</body>
+</html>
